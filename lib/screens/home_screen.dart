@@ -20,6 +20,12 @@ class HomeScreen extends StatelessWidget {
               const _DailyChallengeCard(remaining: '14h 23m', questions: 10),
               const SizedBox(height: 28),
               _SectionTitle('Modos de Jogo', theme: theme),
+              const SizedBox(height: 12),
+              const _GameModeRow(),
+              const SizedBox(height: 28),
+              _SectionTitle('Categorias', theme: theme),
+              const SizedBox(height: 12),
+              const _CategoriesRow(),
             ],
           ),
         ),
@@ -108,7 +114,7 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'Nível $level  -  $xp XP',
+                'Nível $level  •  $xp XP',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: cs.onSurfaceVariant,
                 ),
@@ -210,4 +216,167 @@ class _DailyChallengeCard extends StatelessWidget {
   }
 }
 
+class _GameModeRow extends StatelessWidget {
+  const _GameModeRow();
 
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: _GameModeCard(
+            icon: Icons.menu_book_rounded,
+            title: 'Clássico',
+            subtitle: '10 perguntas',
+            color: cs.primary,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _GameModeCard(
+            icon: Icons.timer_rounded,
+            title: 'Contra-tempo',
+            subtitle: '60 segundos',
+            color: AppColors.accent,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _GameModeCard(
+            icon: Icons.local_fire_department_rounded,
+            title: 'Survival',
+            subtitle: 'Falha = fim',
+            color: AppColors.error,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GameModeCard extends StatelessWidget {
+  const _GameModeCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoriesRow extends StatelessWidget {
+  const _CategoriesRow();
+
+  static const _items = <_Category>[
+    _Category('Ciência', Icons.science_rounded),
+    _Category('História', Icons.history_edu_rounded),
+    _Category('Desporto', Icons.sports_soccer_rounded),
+    _Category('Cinema', Icons.movie_rounded),
+    _Category('Geografia', Icons.public_rounded),
+    _Category('Arte', Icons.palette_rounded),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 96,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _items.length,
+        separatorBuilder: (BuildContext context, int index) => const SizedBox(width: 12),
+        itemBuilder: (BuildContext context, int index) => _CategoryItem(item: _items[index]),
+      ),
+    );
+  }
+}
+
+class _Category {
+  const _Category(this.label, this.icon);
+  final String label;
+  final IconData icon;
+}
+
+class _CategoryItem extends StatelessWidget {
+  const _CategoryItem({required this.item});
+  final _Category item;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: 88,
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: cs.primary.withValues(alpha: 0.20)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(item.icon, color: cs.primary, size: 28),
+              const SizedBox(height: 6),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
