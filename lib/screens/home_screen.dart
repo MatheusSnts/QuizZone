@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../auth_service.dart';
 import '../theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -7,15 +9,21 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final user = authService.value.currentUser;
+    final displayName = user?.displayName?.trim() ?? '';
+    final username = displayName.isNotEmpty
+        ? displayName
+        : (user?.email?.split('@').first ?? 'Jogador');
 
     return Scaffold(
+      drawer: _ProfileDrawer(username: username),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _Header(username: 'Matheus', level: 7, xp: 1240),
+              _Header(username: username, level: 7, xp: 1240),
               const SizedBox(height: 24),
               const _DailyChallengeCard(remaining: '14h 23m', questions: 10),
               const SizedBox(height: 28),
@@ -71,6 +79,86 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+class _ProfileDrawer extends StatelessWidget {
+  const _ProfileDrawer({required this.username});
+
+  final String username;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final email = authService.value.currentUser?.email ?? '';
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: cs.primaryContainer,
+                    child: Text(
+                      username.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          username,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (email.isNotEmpty)
+                          Text(
+                            email,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(Icons.logout_rounded, color: cs.error),
+              title: Text(
+                'Terminar sessão',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: cs.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => _logout(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await authService.value.signOut();
+    if (context.mounted) context.go('/login');
+  }
+}
+
 class _Header extends StatelessWidget {
   const _Header({
     required this.username,
@@ -89,15 +177,19 @@ class _Header extends StatelessWidget {
 
     return Row(
       children: [
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: cs.primaryContainer,
-          child: Text(
-            username.substring(0, 1).toUpperCase(),
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: cs.onPrimaryContainer,
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => Scaffold.of(context).openDrawer(),
+          child: CircleAvatar(
+            radius: 26,
+            backgroundColor: cs.primaryContainer,
+            child: Text(
+              username.substring(0, 1).toUpperCase(),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: cs.onPrimaryContainer,
+              ),
             ),
           ),
         ),

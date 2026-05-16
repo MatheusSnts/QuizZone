@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:quiz_zone/firebase_options.dart';
-import 'screens/home_screen.dart';
+import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -10,7 +10,7 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
-  
+
   runApp(const QuizZoneApp());
 }
 
@@ -19,11 +19,11 @@ class QuizZoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'QuizZone',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(),
-      home: const HomeScreen(),
+      routerConfig: appRouter,
     );
   }
 }
