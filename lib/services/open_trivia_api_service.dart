@@ -42,15 +42,19 @@ class OpenTriviaApiClient {
       throw Exception("Amount deve ser entre 1 e 50");
     }
 
-    String token = await _getToken();
+    final params = <String, String>{
+      'amount': amount.toString(),
+      'type': type,
+      'token': await _getToken(),
+      'encode': 'url3986',
+    };
 
-    String url = 'https://opentdb.com/api.php?amount=$amount&type=$type&token=$token&encode=url3986';
-    if(category != null) {
-      url += '&category=$category';
+    if (category != null) {
+      params['category'] = category.toString();
     }
 
-    final uri = Uri.parse(url);
-    final response = await http.get(uri);
+    final url = Uri.https('opentdb.com', '/api.php', params);
+    final response = await http.get(url);
 
     if (response.statusCode != 200) {
       throw Exception("Falha ao solicitar questões Open Trivia");
