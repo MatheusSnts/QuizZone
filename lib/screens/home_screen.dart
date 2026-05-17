@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../auth_service.dart';
+import '../models/category.dart';
 import '../theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -406,63 +407,60 @@ class _GameModeCard extends StatelessWidget {
 class _CategoriesRow extends StatelessWidget {
   const _CategoriesRow();
 
-  static const _items = <_Category>[
-    _Category('Ciência', Icons.science_rounded),
-    _Category('História', Icons.history_edu_rounded),
-    _Category('Desporto', Icons.sports_soccer_rounded),
-    _Category('Cinema', Icons.movie_rounded),
-    _Category('Geografia', Icons.public_rounded),
-    _Category('Arte', Icons.palette_rounded),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      height: 110,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: _items.length,
-        separatorBuilder: (BuildContext context, int index) => const SizedBox(width: 12),
-        itemBuilder: (BuildContext context, int index) => _CategoryItem(item: _items[index]),
+        itemCount: categories.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) =>
+            _CategoryItem(category: categories[index]),
       ),
     );
   }
 }
 
-class _Category {
-  const _Category(this.label, this.icon);
-  final String label;
-  final IconData icon;
-}
-
 class _CategoryItem extends StatelessWidget {
-  const _CategoryItem({required this.item});
-  final _Category item;
+  const _CategoryItem({required this.category});
+
+  final Category category;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return SizedBox(
-      width: 88,
+      width: 96,
       child: Card(
+        margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: cs.primary.withValues(alpha: 0.20)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(item.icon, color: cs.primary, size: 28),
-              const SizedBox(height: 6),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: category.color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(category.icon, color: category.color, size: 25),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  category.translatedName,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
                 ),
               ),
             ],
