@@ -35,6 +35,7 @@ class OpenTriviaApiClient {
 
   Future<List<OpenTriviaQuestion>> getRandomQuestions({
     required int amount,
+    int? category,
     String type = 'multiple',
   }) async {
     if (amount < 1 || amount > 50) {
@@ -43,10 +44,13 @@ class OpenTriviaApiClient {
 
     String token = await _getToken();
 
-    final url = Uri.parse(
-      'https://opentdb.com/api.php?amount=$amount&type=$type&token=$token&encode=url3986',
-    );
-    final response = await http.get(url);
+    String url = 'https://opentdb.com/api.php?amount=$amount&type=$type&token=$token&encode=url3986';
+    if(category != null) {
+      url += '&category=$category';
+    }
+
+    final uri = Uri.parse(url);
+    final response = await http.get(uri);
 
     if (response.statusCode != 200) {
       throw Exception("Falha ao solicitar questões Open Trivia");
