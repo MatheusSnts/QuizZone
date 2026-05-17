@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 
-import '../auth_service.dart';
+import '../services/auth_service.dart';
 import '../screens/authentication/forgot_password_screen.dart';
 import '../screens/authentication/login_screen.dart';
 import '../screens/authentication/register_screen.dart';
