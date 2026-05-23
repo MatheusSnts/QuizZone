@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../services/auth_service.dart';
 import '../models/category.dart';
+import '../models/user_profile.dart';
+import '../services/auth_service.dart';
+import '../database/profile_database.dart';
 import '../theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -24,7 +26,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Header(username: username, level: 7, xp: 1240),
+              _Header(username: username),
               const SizedBox(height: 24),
               const _DailyChallengeCard(remaining: '14h 23m', questions: 10),
               const SizedBox(height: 28),
@@ -161,20 +163,15 @@ class _ProfileDrawer extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({
-    required this.username,
-    required this.level,
-    required this.xp,
-  });
+  const _Header({required this.username});
 
   final String username;
-  final int level;
-  final int xp;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final uid = authService.value.currentUser?.uid;
 
     return Row(
       children: [
@@ -206,12 +203,26 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                'Nível $level  •  $xp XP',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
+              if (uid == null)
+                Text(
+                  'Nível 1  •  0 XP',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                )
+              else
+                StreamBuilder<UserProfile>(
+                  stream: ProfileDatabase().stream(uid),
+                  builder: (context, snapshot) {
+                    final profile = snapshot.data ?? const UserProfile(xp: 0);
+                    return Text(
+                      'Nível ${profile.level}  •  ${profile.xp} XP',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    );
+                  },
                 ),
-              ),
             ],
           ),
         ),
@@ -433,13 +444,16 @@ class _CategoryItem extends StatelessWidget {
       width: 96,
       child: Card(
         margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        child: InkWell(
+          onTap: () => context.push('/quiz/${category.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 width: 40,
@@ -463,7 +477,8 @@ class _CategoryItem extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
