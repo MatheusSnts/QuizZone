@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/category.dart';
+import '../models/game_mode.dart';
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../database/profile_database.dart';
@@ -325,90 +326,64 @@ class _GameModeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final modes = GameMode.values;
     return Row(
       children: [
-        Expanded(
-          child: _GameModeCard(
-            icon: Icons.menu_book_rounded,
-            title: 'Clássico',
-            subtitle: '10 perguntas',
-            color: cs.primary,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _GameModeCard(
-            icon: Icons.timer_rounded,
-            title: 'Contra-tempo',
-            subtitle: '60 segundos',
-            color: AppColors.accent,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _GameModeCard(
-            icon: Icons.local_fire_department_rounded,
-            title: 'Survival',
-            subtitle: 'Falha = fim',
-            color: AppColors.error,
-          ),
-        ),
+        for (var i = 0; i < modes.length; i++) ...[
+          Expanded(child: _GameModeCard(mode: modes[i])),
+          if (i != modes.length - 1) const SizedBox(width: 12),
+        ],
       ],
     );
   }
 }
 
 class _GameModeCard extends StatelessWidget {
-  const _GameModeCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
+  const _GameModeCard({required this.mode});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
+  final GameMode mode;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
-        child: Column(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () => context.push('/play/${mode.slug}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: mode.color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(mode.icon, color: mode.color, size: 24),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
+              const SizedBox(height: 10),
+              Text(
+                mode.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                color: cs.onSurfaceVariant,
+              const SizedBox(height: 2),
+              Text(
+                mode.subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: cs.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
