@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/category.dart';
+import '../../models/game_mode.dart';
 import '../../models/quiz_question.dart';
 import '../../services/auth_service.dart';
 import '../../database/profile_database.dart';
@@ -9,9 +12,11 @@ import '../../services/quiz_service.dart';
 import '../../theme/app_theme.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key, required this.categoryId});
+  const QuizScreen({super.key, this.categoryId, this.mode});
 
-  final int categoryId;
+  final int? categoryId;
+
+  final GameMode? mode;
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -26,23 +31,55 @@ class _QuizScreenState extends State<QuizScreen> {
 
   int _index = 0;
   int _correct = 0;
+  int _answeredCount = 0;
   int _earnedXp = 0;
   String? _selected;
   bool _answered = false;
   bool _finished = false;
   bool _xpSaved = false;
+  bool _gameOver = false;
 
-  Category get _category =>
-      categories.firstWhere((c) => c.id == widget.categoryId);
+  Timer? _timer;
+  int _secondsLeft = 0;
+
+  bool get _isCategoryMode => widget.categoryId != null;
+
+  Category? get _fixedCategory => _isCategoryMode
+      ? categories.firstWhere((c) => c.id == widget.categoryId)
+      : null;
+
+  Category _categoryFor(_GameQuestion game) =>
+      categories.firstWhere((c) => c.id == game.question.categoryId);
+
+  String get _title =>
+      _isCategoryMode ? _fixedCategory!.translatedName : widget.mode!.title;
+
+  int get _amount => _isCategoryMode
+      ? QuizService.questionsPerGame
+      : widget.mode!.questionAmount;
+
+  Duration get _delayAfterQuestion => widget.mode == GameMode.timeAttack
+      ? const Duration(milliseconds: 700)
+      : const Duration(milliseconds: 1200);
 
   @override
   void initState() {
     super.initState();
     _loadFuture = _load();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<List<_GameQuestion>> _load() async {
-    final questions = await _quizService.startCategoryQuiz(widget.categoryId);
+    final questions = await _quizService.startQuiz(
+      amount: _amount,
+      categoryId: widget.categoryId,
+    );
     final games = questions.map(_GameQuestion.new).toList();
     _questions
       ..clear()
@@ -51,34 +88,64 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _retry() {
+    _timer?.cancel();
     setState(() {
       _index = 0;
       _correct = 0;
+      _answeredCount = 0;
       _earnedXp = 0;
       _selected = null;
       _answered = false;
       _finished = false;
       _xpSaved = false;
+      _gameOver = false;
+      _timer = null;
+      _secondsLeft = 0;
       _loadFuture = _load();
+    });
+    _startTimer();
+  }
+
+  void _startTimer() {
+    final limit = widget.mode?.timeLimitSeconds;
+    if (limit == null)
+      return; // modos sem tempo
+
+    _secondsLeft = limit;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || _finished) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _secondsLeft--);
+      if (_secondsLeft <= 0) {
+        timer.cancel();
+        _finish();
+      }
     });
   }
 
   void _onAnswer(String answer) {
-    if (_answered) return;
+    if (_answered || _finished) return;
     final question = _questions[_index];
+    final correct = answer == question.question.correctAnswer;
     setState(() {
       _selected = answer;
       _answered = true;
-      if (answer == question.question.correctAnswer) {
+      _answeredCount++;
+      if (correct) {
         _correct++;
         _earnedXp += question.question.xpReward;
+      } else if (widget.mode?.isSurvival == true) {
+        _gameOver = true;
       }
     });
-    Future.delayed(const Duration(milliseconds: 1200), _next);
+    Future.delayed(_delayAfterQuestion, _next);
   }
 
   void _next() {
-    if (_index >= _questions.length - 1) {
+    if (_finished) return;
+    if (_gameOver || _index >= _questions.length - 1) {
       _finish();
       return;
     }
@@ -90,7 +157,8 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _finish() async {
-    setState(() => _finished = true);
+    _timer?.cancel();
+    if (mounted) setState(() => _finished = true);
     if (_xpSaved) return;
     _xpSaved = true;
 
@@ -142,9 +210,9 @@ class _QuizScreenState extends State<QuizScreen> {
             }
             if (_finished) {
               return _ResultView(
-                category: _category,
+                subtitle: _title,
                 correct: _correct,
-                total: _questions.length,
+                total: _answeredCount,
                 earnedXp: _earnedXp,
               );
             }
@@ -157,12 +225,31 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Widget _buildGame() {
     final theme = Theme.of(context);
+
     final game = _questions[_index];
-    final progress = (_index + 1) / _questions.length;
+    final isTimeAttack = widget.mode == GameMode.timeAttack;
+    final accent = widget.mode?.color ?? theme.colorScheme.primary;
+    final displayCategory = _isCategoryMode
+        ? _fixedCategory!
+        : _categoryFor(game);
+
+    final double progress = isTimeAttack
+        ? _secondsLeft / widget.mode!.timeLimitSeconds!
+        : (_index + 1) / _questions.length;
+
     final labelStyle = theme.textTheme.labelLarge?.copyWith(
-      color: theme.colorScheme.primary,
+      color: accent,
       fontWeight: FontWeight.w700,
     );
+
+    final String leftLabel;
+    if (isTimeAttack) {
+      leftLabel = _formatTime(_secondsLeft);
+    } else if (widget.mode?.isSurvival == true) {
+      leftLabel = 'Pergunta ${_index + 1}';
+    } else {
+      leftLabel = 'Pergunta ${_index + 1} de ${_questions.length}';
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,10 +265,18 @@ class _QuizScreenState extends State<QuizScreen> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
           child: Row(
             children: [
-              Text(
-                'Pergunta ${_index + 1} de ${_questions.length}',
-                style: labelStyle,
-              ),
+              if (isTimeAttack)
+                Icon(Icons.timer_rounded, size: 18, color: accent)
+              else if (widget.mode?.isSurvival == true)
+                Icon(
+                  Icons.local_fire_department_rounded,
+                  size: 18,
+                  color: accent,
+                ),
+              if (isTimeAttack || widget.mode?.isSurvival == true)
+                const SizedBox(width: 6),
+
+              Text(leftLabel, style: labelStyle),
               const Spacer(),
               Text('$_earnedXp XP', style: labelStyle),
             ],
@@ -192,7 +287,7 @@ class _QuizScreenState extends State<QuizScreen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
-              value: progress,
+              value: progress.clamp(0.0, 1.0),
               minHeight: 8,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
@@ -205,7 +300,7 @@ class _QuizScreenState extends State<QuizScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _QuestionCard(
-                  category: _category,
+                  category: displayCategory,
                   question: game.question.question,
                 ),
                 const SizedBox(height: 20),
@@ -231,6 +326,12 @@ class _QuizScreenState extends State<QuizScreen> {
     if (answer == _selected) return _AnswerState.wrong;
     return _AnswerState.disabled;
   }
+
+  String _formatTime(int seconds) {
+    final minutes = seconds / 60;
+    final rest = seconds % 60;
+    return '$minutes:${rest.toString().padLeft(2, '0')}';
+  }
 }
 
 class _GameQuestion {
@@ -241,7 +342,6 @@ class _GameQuestion {
     answers = [question.correctAnswer, ...question.incorrectAnswers];
     answers.shuffle();
   }
-
 }
 
 enum _AnswerState { idle, correct, wrong, disabled }
@@ -481,13 +581,13 @@ class _ErrorView extends StatelessWidget {
 
 class _ResultView extends StatelessWidget {
   const _ResultView({
-    required this.category,
+    required this.subtitle,
     required this.correct,
     required this.total,
     required this.earnedXp,
   });
 
-  final Category category;
+  final String subtitle;
   final int correct;
   final int total;
   final int earnedXp;
@@ -523,7 +623,7 @@ class _ResultView extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            category.translatedName,
+            subtitle,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
