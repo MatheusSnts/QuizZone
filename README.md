@@ -4,35 +4,36 @@ Quiz Zone - Projeto CM 2025-2026
 QuizZone
 Descrição do Projeto
 
-O QuizZone é uma aplicação móvel desenvolvida em Flutter que tem como objetivo proporcionar uma experiência de aprendizagem e entretenimento através de quizzes interativos. A aplicação permite aos utilizadores testar os seus conhecimentos em diversas áreas temáticas, acompanhar o seu progresso e participar em diferentes modos de jogo.
+O QuizZone é uma aplicação móvel desenvolvida em Flutter que proporciona uma experiência de aprendizagem e entretenimento através de quizzes interativos. A aplicação permite aos utilizadores testar os seus conhecimentos em diferentes áreas temáticas, acompanhar a sua evolução através de um sistema de níveis e experiência (XP) e participar em vários modos de jogo.
 
-O projeto foi desenvolvido no âmbito da unidade curricular de Computação Móvel da Licenciatura em Engenharia Informática da Escola Superior de Tecnologia de Setúbal.
+Este projeto foi desenvolvido no âmbito da unidade curricular de Computação Móvel da Licenciatura em Engenharia Informática da Escola Superior de Tecnologia de Setúbal.
 
 Objetivos
 
 Os principais objetivos da aplicação são:
 
-Proporcionar uma experiência de jogo intuitiva e interativa;
-Incentivar a aprendizagem através de perguntas de conhecimento geral;
+Proporcionar uma experiência de utilização intuitiva e interativa;
+Incentivar a aprendizagem através de quizzes de conhecimento geral;
 Implementar um sistema de progressão baseado em experiência (XP) e níveis;
 Disponibilizar diferentes modos de jogo para aumentar o envolvimento dos utilizadores;
-Aplicar os conhecimentos adquiridos na unidade curricular de Computação Móvel.
+Aplicar os conhecimentos adquiridos na unidade curricular de Computação Móvel;
+Desenvolver uma aplicação móvel utilizando Flutter e boas práticas de programação.
 Funcionalidades
 Ecrã Principal
 
 O ecrã principal permite ao utilizador visualizar:
 
-Informação do perfil (nome, nível e experiência);
+Informações do perfil (nome, nível e experiência);
 Desafio diário disponível;
 Modos de jogo existentes;
 Categorias disponíveis;
-Barra de navegação para acesso às diferentes áreas da aplicação.
+Barra de navegação para acesso rápido às diferentes áreas da aplicação.
 Modos de Jogo
 
 A aplicação disponibiliza vários modos de jogo:
 
 Modo Clássico – conjunto de perguntas com número fixo;
-Modo Contra-Tempo – responder ao maior número de perguntas num tempo limitado;
+Modo Contra-Tempo – responder ao maior número possível de perguntas dentro de um limite de tempo;
 Modo Survival – o jogo termina após a primeira resposta incorreta;
 Desafio Diário – desafio especial renovado diariamente para todos os utilizadores.
 Categorias
@@ -45,6 +46,19 @@ Desporto;
 Cinema;
 Geografia;
 Arte.
+Ranking
+
+O sistema de ranking permite comparar o desempenho dos utilizadores através da experiência acumulada e da sua posição na classificação geral.
+
+Perfil
+
+O perfil do utilizador apresenta informações relevantes sobre a sua progressão, incluindo:
+
+Nome do utilizador;
+Nível atual;
+Experiência total (XP);
+Número de quizzes realizados;
+Estatísticas e conquistas.
 Tecnologias Utilizadas
 Flutter
 Dart
@@ -56,8 +70,11 @@ Estrutura do Projeto
 lib/
 │
 ├── main.dart
+│
 ├── screens/
-│   └── home_screen.dart
+│   ├── home_screen.dart
+│   ├── ranking_screen.dart
+│   └── profile_screen.dart
 │
 ├── theme/
 │   └── app_theme.dart
@@ -84,13 +101,15 @@ Consistência gráfica;
 Navegação intuitiva;
 Responsividade para diferentes tamanhos de ecrã.
 
-O tema visual da aplicação encontra-se centralizado na classe AppTheme, permitindo uma gestão consistente das cores e estilos utilizados.
+O tema visual da aplicação encontra-se centralizado na classe AppTheme, permitindo uma gestão consistente das cores, tipografia e estilos utilizados em toda a aplicação.
 
 Execução da Aplicação
 Instalar dependências
 flutter pub get
 Executar a aplicação
 flutter run
+Gerar APK
+flutter build apk
 Autores
 
 Projeto desenvolvido por:
@@ -107,4 +126,7 @@ Ano Letivo 2025/2026
 
 Considerações Finais
 
-O QuizZone foi desenvolvido com o objetivo de consolidar os conhecimentos adquiridos ao longo da unidade curricular de Computação Móvel, aplicando conceitos de desenvolvimento de aplicações móveis, organização modular de código, design de interfaces e boas práticas de programação.
+O QuizZone foi desenvolvido com o objetivo de consolidar os conhecimentos adquiridos ao longo da unidade curricular de Computação Móvel, aplicando conceitos de desenvolvimento de aplicações móveis, organização modular de código, design de interfaces, navegação entre ecrãs e boas práticas de programação.
+
+A aplicação apresenta uma estrutura preparada para futuras expansões, permitindo a integração de novas categorias, modos de jogo, sistemas de autenticação, armazenamento de dados e funcionalidades online.
+
