@@ -1,14 +1,23 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:quiz_zone/firebase_options.dart';
 
-// Importa o ecrã principal da aplicação.
-import 'screens/home_screen.dart';
+// Importa a configuração de rotas da aplicação.
+import 'router/app_router.dart';
 
 // Importa a configuração do tema global da aplicação.
 import 'theme/app_theme.dart';
 
 /// Ponto de entrada da aplicação.
 /// A função main() é a primeira a ser executada quando a app inicia.
-void main() {
+/// Inicializa o Firebase antes de arrancar a interface.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const QuizZoneApp());
 }
 
@@ -20,19 +29,18 @@ class QuizZoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    // MaterialApp é o widget raiz da aplicação.
-    // Contém configurações globais como tema,
-    // navegação e ecrã inicial.
-    return MaterialApp(
-        // Nome da aplicação.
+    // MaterialApp.router é o widget raiz da aplicação.
+    // Contém configurações globais como tema e navegação
+    // baseada em rotas (go_router).
+    return MaterialApp.router(
+      // Nome da aplicação.
       title: 'QuizZone',
-       // Remove a faixa "DEBUG" apresentada por defeito.
+      // Remove a faixa "DEBUG" apresentada por defeito.
       debugShowCheckedModeBanner: false,
-        // Aplica o tema personalizado definido em AppTheme.
+      // Aplica o tema personalizado definido em AppTheme.
       theme: AppTheme.build(),
-      // Define o primeiro ecrã apresentado ao utilizador.
-      home: const HomeScreen(),
+      // Define a configuração de rotas da aplicação.
+      routerConfig: appRouter,
     );
   }
 }

@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../models/category.dart';
+import '../models/game_mode.dart';
+import '../models/user_profile.dart';
+import '../services/auth_service.dart';
+import '../database/profile_database.dart';
 import '../theme/app_theme.dart';
 
 // Ecrã principal da aplicação.
@@ -7,22 +13,27 @@ import '../theme/app_theme.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-
-// Constrói a interface principal da Home Screen.
-// Utiliza um Scaffold com barra de navegação inferior
-// e conteúdo scrollável.
+  // Constrói a interface principal da Home Screen.
+  // Utiliza um Scaffold com barra de navegação inferior
+  // e conteúdo scrollável.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final user = authService.value.currentUser;
+    final displayName = user?.displayName?.trim() ?? '';
+    final username = displayName.isNotEmpty
+        ? displayName
+        : (user?.email?.split('@').first ?? 'Jogador');
 
     return Scaffold(
+      drawer: _ProfileDrawer(username: username),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _Header(username: 'Matheus', level: 7, xp: 1240),
+              _Header(username: username),
               const SizedBox(height: 24),
               const _DailyChallengeCard(remaining: '14h 23m', questions: 10),
               const SizedBox(height: 28),
@@ -80,36 +91,118 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// Cabeçalho da aplicação.
-// Mostra avatar, nome do utilizador, nível,
-// experiência acumulada e botão de notificações.
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.username,
-    required this.level,
-    required this.xp,
-  });
+// Painel lateral (drawer) de perfil.
+// Mostra avatar, nome e email do utilizador
+// e permite terminar a sessão.
+class _ProfileDrawer extends StatelessWidget {
+  const _ProfileDrawer({required this.username});
 
   final String username;
-  final int level;
-  final int xp;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final email = authService.value.currentUser?.email ?? '';
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: cs.primaryContainer,
+                    child: Text(
+                      username.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          username,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (email.isNotEmpty)
+                          Text(
+                            email,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(Icons.logout_rounded, color: cs.error),
+              title: Text(
+                'Terminar sessão',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: cs.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => _logout(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await authService.value.signOut();
+    if (context.mounted) context.go('/login');
+  }
+}
+
+// Cabeçalho da aplicação.
+// Mostra avatar, nome do utilizador, nível,
+// experiência acumulada e botão de notificações.
+class _Header extends StatelessWidget {
+  const _Header({required this.username});
+
+  final String username;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final uid = authService.value.currentUser?.uid;
 
     return Row(
       children: [
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: cs.primaryContainer,
-          child: Text(
-            username.substring(0, 1).toUpperCase(),
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: cs.onPrimaryContainer,
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => Scaffold.of(context).openDrawer(),
+          child: CircleAvatar(
+            radius: 26,
+            backgroundColor: cs.primaryContainer,
+            child: Text(
+              username.substring(0, 1).toUpperCase(),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: cs.onPrimaryContainer,
+              ),
             ),
           ),
         ),
@@ -125,12 +218,26 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                'Nível $level  •  $xp XP',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
+              if (uid == null)
+                Text(
+                  'Nível 1  •  0 XP',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                )
+              else
+                StreamBuilder<UserProfile>(
+                  stream: ProfileDatabase().stream(uid),
+                  builder: (context, snapshot) {
+                    final profile = snapshot.data ?? const UserProfile(xp: 0);
+                    return Text(
+                      'Nível ${profile.level}  •  ${profile.xp} XP',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    );
+                  },
                 ),
-              ),
             ],
           ),
         ),
@@ -233,97 +340,70 @@ class _DailyChallengeCard extends StatelessWidget {
 
 // Secção que apresenta os diferentes modos de jogo.
 class _GameModeRow extends StatelessWidget {
-class _GameModeRow extends StatelessWidget {
   const _GameModeRow();
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final modes = GameMode.values;
     return Row(
       children: [
-        Expanded(
-          child: _GameModeCard(
-            icon: Icons.menu_book_rounded,
-            title: 'Clássico',
-            subtitle: '10 perguntas',
-            color: cs.primary,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _GameModeCard(
-            icon: Icons.timer_rounded,
-            title: 'Contra-tempo',
-            subtitle: '60 segundos',
-            color: AppColors.accent,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _GameModeCard(
-            icon: Icons.local_fire_department_rounded,
-            title: 'Survival',
-            subtitle: 'Falha = fim',
-            color: AppColors.error,
-          ),
-        ),
+        for (var i = 0; i < modes.length; i++) ...[
+          Expanded(child: _GameModeCard(mode: modes[i])),
+          if (i != modes.length - 1) const SizedBox(width: 12),
+        ],
       ],
     );
   }
 }
 
 // Cartão reutilizável para representar um modo de jogo.
-// Recebe ícone, título, descrição e cor personalizada.
+// Ao ser tocado, navega para o ecrã do modo selecionado.
 class _GameModeCard extends StatelessWidget {
-  const _GameModeCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
+  const _GameModeCard({required this.mode});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
+  final GameMode mode;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
-        child: Column(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () => context.push('/play/${mode.slug}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: mode.color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(mode.icon, color: mode.color, size: 24),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
+              const SizedBox(height: 10),
+              Text(
+                mode.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                color: cs.onSurfaceVariant,
+              const SizedBox(height: 2),
+              Text(
+                mode.subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: cs.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -334,70 +414,70 @@ class _GameModeCard extends StatelessWidget {
 class _CategoriesRow extends StatelessWidget {
   const _CategoriesRow();
 
-  static const _items = <_Category>[
-    _Category('Ciência', Icons.science_rounded),
-    _Category('História', Icons.history_edu_rounded),
-    _Category('Desporto', Icons.sports_soccer_rounded),
-    _Category('Cinema', Icons.movie_rounded),
-    _Category('Geografia', Icons.public_rounded),
-    _Category('Arte', Icons.palette_rounded),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      height: 110,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: _items.length,
-        separatorBuilder: (BuildContext context, int index) => const SizedBox(width: 12),
-        itemBuilder: (BuildContext context, int index) => _CategoryItem(item: _items[index]),
+        itemCount: categories.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) =>
+            _CategoryItem(category: categories[index]),
       ),
     );
   }
 }
 
-// Modelo que representa uma categoria.
-// Armazena o nome e o ícone associado.
-class _Category {
-  const _Category(this.label, this.icon);
-  final String label;
-  final IconData icon;
-}
-
 // Widget responsável pela apresentação visual
 // de uma categoria individual.
+// Ao ser tocado, navega para o quiz da categoria.
 class _CategoryItem extends StatelessWidget {
-  const _CategoryItem({required this.item});
-  final _Category item;
+  const _CategoryItem({required this.category});
+
+  final Category category;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return SizedBox(
-      width: 88,
+      width: 96,
       child: Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: cs.primary.withValues(alpha: 0.20)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(item.icon, color: cs.primary, size: 28),
-              const SizedBox(height: 6),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+        child: InkWell(
+          onTap: () => context.push('/quiz/${category.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: category.color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(category.icon, color: category.color, size: 25),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Flexible(
+                  child: Text(
+                    category.translatedName,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

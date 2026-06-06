@@ -1,0 +1,24 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/quiz_question.dart';
+
+class QuestionDatabase {
+  final CollectionReference<Map<String, dynamic>> _questions =
+      FirebaseFirestore.instance.collection('questions');
+
+
+  Future<QuizQuestion?> findByOriginalQuestion(String originalQuestion) async {
+    final snapshot = await _questions
+        .where('originalQuestion', isEqualTo: originalQuestion)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+    return QuizQuestion.fromFirestore(snapshot.docs.first);
+  }
+
+  Future<QuizQuestion> save(QuizQuestion question) async {
+    final ref = await _questions.add(question.toFirestore());
+    return question.copyWith(id: ref.id);
+  }
+}
