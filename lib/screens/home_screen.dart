@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+// Ecrã principal da aplicação.
+// Apresenta informações do utilizador, desafio diário,
+// modos de jogo e categorias disponíveis.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+
+// Constrói a interface principal da Home Screen.
+// Utiliza um Scaffold com barra de navegação inferior
+// e conteúdo scrollável.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -55,6 +62,8 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// Título reutilizável utilizado para separar secções
+// da interface (ex.: Modos de Jogo, Categorias).
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text, {required this.theme});
   final String text;
@@ -71,6 +80,9 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+// Cabeçalho da aplicação.
+// Mostra avatar, nome do utilizador, nível,
+// experiência acumulada e botão de notificações.
 class _Header extends StatelessWidget {
   const _Header({
     required this.username,
@@ -131,6 +143,9 @@ class _Header extends StatelessWidget {
   }
 }
 
+// Cartão do desafio diário.
+// Apresenta o número de perguntas disponíveis,
+// tempo restante e botão para iniciar o desafio.
 class _DailyChallengeCard extends StatelessWidget {
   const _DailyChallengeCard({
     required this.remaining,
@@ -216,6 +231,8 @@ class _DailyChallengeCard extends StatelessWidget {
   }
 }
 
+// Secção que apresenta os diferentes modos de jogo.
+class _GameModeRow extends StatelessWidget {
 class _GameModeRow extends StatelessWidget {
   const _GameModeRow();
 
@@ -255,6 +272,8 @@ class _GameModeRow extends StatelessWidget {
   }
 }
 
+// Cartão reutilizável para representar um modo de jogo.
+// Recebe ícone, título, descrição e cor personalizada.
 class _GameModeCard extends StatelessWidget {
   const _GameModeCard({
     required this.icon,
@@ -311,6 +330,7 @@ class _GameModeCard extends StatelessWidget {
   }
 }
 
+// Lista horizontal de categorias disponíveis na aplicação.
 class _CategoriesRow extends StatelessWidget {
   const _CategoriesRow();
 
@@ -337,12 +357,16 @@ class _CategoriesRow extends StatelessWidget {
   }
 }
 
+// Modelo que representa uma categoria.
+// Armazena o nome e o ícone associado.
 class _Category {
   const _Category(this.label, this.icon);
   final String label;
   final IconData icon;
 }
 
+// Widget responsável pela apresentação visual
+// de uma categoria individual.
 class _CategoryItem extends StatelessWidget {
   const _CategoryItem({required this.item});
   final _Category item;
