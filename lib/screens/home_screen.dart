@@ -61,7 +61,9 @@ class HomeScreen extends StatelessWidget {
             label: 'Perfil',
           ),
         ],
-        onDestinationSelected: (_) {},
+       onDestinationSelected: (index) {
+          if (index == 2) context.go('/profile');
+        },
       ),
     );
   }
@@ -140,6 +142,11 @@ class _ProfileDrawer extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
+            ListTile(
+                leading: const Icon(Icons.person_outline),
+              title: const Text('Perfil'),
+              onTap: () => context.go('/profile'),
+            ),
             ListTile(
               leading: Icon(Icons.logout_rounded, color: cs.error),
               title: Text(

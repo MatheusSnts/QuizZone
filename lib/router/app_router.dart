@@ -5,6 +5,7 @@ import '../screens/authentication/login_screen.dart';
 import '../screens/authentication/register_screen.dart';
 import '../models/game_mode.dart';
 import '../screens/home_screen.dart';
+import '../screens/profile_screen.dart';
 import '../screens/quiz/quiz_screen.dart';
 import '../services/auth_service.dart';
 
@@ -28,6 +29,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
+          path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
       path: '/quiz/:categoryId',
       builder: (context, state) => QuizScreen(
         categoryId: int.parse(state.pathParameters['categoryId']!),
@@ -49,6 +54,7 @@ final GoRouter appRouter = GoRouter(
         location == '/register' ||
         location == '/forgot-password';
     final isProtectedRoute = location == '/home' ||
+        location == '/profile' ||
         location.startsWith('/quiz') ||
         location.startsWith('/play');
 
