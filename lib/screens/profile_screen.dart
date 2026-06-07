@@ -9,8 +9,26 @@ import '../theme/app_theme.dart';
 /// Ecrã de perfil do jogador.
 ///
 /// Combina dados da conta Firebase com o XP guardado em Firestore.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final ProfileDatabase _database = ProfileDatabase();
+
+  Stream<UserProfile>? _profileStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = authService.value.currentUser?.uid;
+    if (uid != null) {
+      _profileStream = _database.stream(uid);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +38,13 @@ class ProfileScreen extends StatelessWidget {
         ? displayName
         : (user?.email?.split('@').first ?? 'Jogador');
     final email = user?.email ?? 'Sem email associado';
-    final uid = user?.uid;
 
     return Scaffold(
       body: SafeArea(
-        child: uid == null
+        child: _profileStream == null
             ? _SignedOutView(username: username)
             : StreamBuilder<UserProfile>(
-                stream: ProfileDatabase().stream(uid),
+                stream: _profileStream,
                 builder: (context, snapshot) {
                   final profile = snapshot.data ?? const UserProfile(xp: 0);
 
@@ -411,7 +428,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-/// Cartão reutilizável para cada métrica do perfil.
+/// Cartão com as ações de conta (email e terminar sessão).
 class _AccountActions extends StatelessWidget {
   const _AccountActions({required this.email});
 

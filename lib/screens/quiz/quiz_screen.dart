@@ -29,7 +29,7 @@ class _QuizScreenState extends State<QuizScreen> {
   final QuizService _quizService = QuizService();
   final ProfileDatabase _profileDatabase = ProfileDatabase();
 
-// Perguntas carregadas para a partida atual.
+  // Perguntas carregadas para a partida atual.
   late Future<List<_GameQuestion>> _loadFuture;
   final List<_GameQuestion> _questions = [];
 
@@ -44,7 +44,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _xpSaved = false;
   bool _gameOver = false;
 
- // Estado usado apenas em modos com tempo limite.
+  // Estado usado apenas em modos com tempo limite.
   Timer? _timer;
   int _secondsLeft = 0;
 
@@ -81,7 +81,7 @@ class _QuizScreenState extends State<QuizScreen> {
     super.dispose();
   }
 
-/// Carrega perguntas e prepara as respostas embaralhadas para cada uma.
+  /// Carrega perguntas e prepara as respostas embaralhadas para cada uma.
   Future<List<_GameQuestion>> _load() async {
     final questions = await _quizService.startQuiz(
       amount: _amount,
@@ -94,7 +94,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return games;
   }
 
-/// Reinicia todo o estado da partida depois de um erro.
+  /// Reinicia todo o estado da partida depois de um erro.
   void _retry() {
     _timer?.cancel();
     setState(() {
@@ -114,11 +114,12 @@ class _QuizScreenState extends State<QuizScreen> {
     _startTimer();
   }
 
- /// Inicia o temporizador quando o modo de jogo tem limite de tempo.
+  /// Inicia o temporizador quando o modo de jogo tem limite de tempo.
   void _startTimer() {
     final limit = widget.mode?.timeLimitSeconds;
-    if (limit == null)
+    if (limit == null) {
       return; // modos sem tempo
+    }
 
     _secondsLeft = limit;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -133,7 +134,8 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     });
   }
- /// Processa a resposta escolhida, calcula XP e aplica regras do modo.
+
+  /// Processa a resposta escolhida, calcula XP e aplica regras do modo.
   void _onAnswer(String answer) {
     if (_answered || _finished) return;
     final question = _questions[_index];
@@ -152,7 +154,7 @@ class _QuizScreenState extends State<QuizScreen> {
     Future.delayed(_delayAfterQuestion, _next);
   }
 
- /// Avança para a próxima pergunta ou termina a partida.
+  /// Avança para a próxima pergunta ou termina a partida.
   void _next() {
     if (_finished) return;
     if (_gameOver || _index >= _questions.length - 1) {
@@ -166,7 +168,7 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
- /// Finaliza a partida e guarda o XP ganho uma única vez.
+  /// Finaliza a partida e guarda o XP ganho uma única vez.
   Future<void> _finish() async {
     _timer?.cancel();
     if (mounted) setState(() => _finished = true);
@@ -178,7 +180,8 @@ class _QuizScreenState extends State<QuizScreen> {
       await _profileDatabase.addXp(uid, _earnedXp);
     }
   }
- /// Confirma saída para evitar perder progresso por engano.
+
+  /// Confirma saída para evitar perder progresso por engano.
   Future<void> _confirmExit() async {
     if (_finished || _questions.isEmpty) {
       context.go('/home');
@@ -244,8 +247,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ? _fixedCategory!
         : _categoryFor(game);
 
-
-   // No contra-tempo, a barra representa segundos restantes; nos outros
+    // No contra-tempo, a barra representa segundos restantes; nos outros
     // modos, representa o avanço nas perguntas.
     final double progress = isTimeAttack
         ? _secondsLeft / widget.mode!.timeLimitSeconds!

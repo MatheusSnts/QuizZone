@@ -195,16 +195,38 @@ class _ProfileDrawer extends StatelessWidget {
 // Cabeçalho da aplicação.
 // Mostra avatar, nome do utilizador, nível,
 // experiência acumulada e botão de notificações.
-class _Header extends StatelessWidget {
+class _Header extends StatefulWidget {
   const _Header({required this.username});
 
   final String username;
 
   @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> {
+  final ProfileDatabase _database = ProfileDatabase();
+
+  /// A stream é criada uma única vez para não voltar a subscrever o Firestore
+  /// a cada rebuild do cabeçalho.
+  Stream<UserProfile>? _profileStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = authService.value.currentUser?.uid;
+    if (uid != null) {
+      _profileStream = _database.stream(uid);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final uid = authService.value.currentUser?.uid;
+    final username = widget.username;
+    final initial =
+        username.trim().isEmpty ? 'J' : username.trim()[0].toUpperCase();
   // O avatar também funciona como atalho para abrir o drawer.
     return Row(
       children: [
@@ -215,7 +237,7 @@ class _Header extends StatelessWidget {
             radius: 26,
             backgroundColor: cs.primaryContainer,
             child: Text(
-              username.substring(0, 1).toUpperCase(),
+              initial,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -236,7 +258,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              if (uid == null)
+              if (_profileStream == null)
                 Text(
                   'Nível 1  •  0 XP',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -247,7 +269,7 @@ class _Header extends StatelessWidget {
               // O XP é observado em tempo real para refletir partidas recentes.
 
                 StreamBuilder<UserProfile>(
-                  stream: ProfileDatabase().stream(uid),
+                  stream: _profileStream,
                   builder: (context, snapshot) {
                     final profile = snapshot.data ?? const UserProfile(xp: 0);
                     return Text(
