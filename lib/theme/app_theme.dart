@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+
 /// Cores partilhadas pela aplicação.
 class AppColors {
 
@@ -14,7 +15,7 @@ class AppColors {
   static const Color error = Color(0xFFEF4444);
 }
 
-
+/// Classe responsável pela configuração global do tema da aplicação.
 class AppTheme {
 
  /// Cria o tema Material 3 usado em todos os ecrãs.

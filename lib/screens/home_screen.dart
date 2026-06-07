@@ -7,12 +7,21 @@ import '../services/auth_service.dart';
 import '../database/profile_database.dart';
 import '../theme/app_theme.dart';
 
+
 /// Ecrã inicial depois do login.
 ///
 /// Mostra o resumo do jogador, modos de jogo e categorias disponíveis.
+
+// Ecrã principal da aplicação.
+// Apresenta informações do utilizador, desafio diário,
+// modos de jogo e categorias disponíveis.
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // Constrói a interface principal da Home Screen.
+  // Utiliza um Scaffold com barra de navegação inferior
+  // e conteúdo scrollável.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -72,6 +81,8 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// Título reutilizável utilizado para separar secções
+// da interface (ex.: Modos de Jogo, Categorias).
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text, {required this.theme});
   final String text;
@@ -89,7 +100,13 @@ class _SectionTitle extends StatelessWidget {
 }
 
 
+
 /// Menu lateral com dados básicos da conta e ações do utilizador.
+
+// Painel lateral (drawer) de perfil.
+// Mostra avatar, nome e email do utilizador
+// e permite terminar a sessão.
+
 class _ProfileDrawer extends StatelessWidget {
   const _ProfileDrawer({required this.username});
 
@@ -175,6 +192,9 @@ class _ProfileDrawer extends StatelessWidget {
   }
 }
 
+// Cabeçalho da aplicação.
+// Mostra avatar, nome do utilizador, nível,
+// experiência acumulada e botão de notificações.
 class _Header extends StatelessWidget {
   const _Header({required this.username});
 
@@ -249,7 +269,13 @@ class _Header extends StatelessWidget {
     );
   }
 }
+
 /// Cartão destacado para o desafio diário.
+
+// Cartão do desafio diário.
+// Apresenta o número de perguntas disponíveis,
+// tempo restante e botão para iniciar o desafio.
+
 class _DailyChallengeCard extends StatelessWidget {
   const _DailyChallengeCard({
     required this.remaining,
@@ -336,6 +362,7 @@ class _DailyChallengeCard extends StatelessWidget {
 }
 
 /// Linha horizontal com os modos de jogo principais.
+// Secção que apresenta os diferentes modos de jogo.
 class _GameModeRow extends StatelessWidget {
   const _GameModeRow();
 
@@ -353,7 +380,10 @@ class _GameModeRow extends StatelessWidget {
   }
 }
 
-/// Cartão clicável de um modo de jogo.
+
+// Cartão reutilizável para representar um modo de jogo.
+// Ao ser tocado, navega para o ecrã do modo selecionado.
+
 class _GameModeCard extends StatelessWidget {
   const _GameModeCard({required this.mode});
 
@@ -406,7 +436,11 @@ class _GameModeCard extends StatelessWidget {
   }
 }
 
+
 /// Lista horizontal de categorias de quiz.
+
+// Lista horizontal de categorias disponíveis na aplicação.
+
 class _CategoriesRow extends StatelessWidget {
   const _CategoriesRow();
 
@@ -425,7 +459,13 @@ class _CategoriesRow extends StatelessWidget {
   }
 }
 
+
 /// Item clicável de categoria.
+
+// Widget responsável pela apresentação visual
+// de uma categoria individual.
+// Ao ser tocado, navega para o quiz da categoria.
+
 class _CategoryItem extends StatelessWidget {
   const _CategoryItem({required this.category});
 
@@ -447,29 +487,29 @@ class _CategoryItem extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: category.color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(category.icon, color: category.color, size: 25),
                 ),
-                child: Icon(category.icon, color: category.color, size: 25),
-              ),
-              const SizedBox(height: 8),
-              Flexible(
-                child: Text(
-                  category.translatedName,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
+                const SizedBox(height: 8),
+                Flexible(
+                  child: Text(
+                    category.translatedName,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
                   ),
                 ),
-              ),
               ],
             ),
           ),
