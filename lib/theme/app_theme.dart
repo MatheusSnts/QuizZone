@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 
+/// Classe responsável por armazenar todas as cores
+/// personalizadas utilizadas na aplicação.
 class AppColors {
 
 
@@ -13,7 +15,7 @@ class AppColors {
   static const Color error = Color(0xFFEF4444);
 }
 
-
+/// Classe responsável pela configuração global do tema da aplicação.
 class AppTheme {
 
   static ThemeData build() {
