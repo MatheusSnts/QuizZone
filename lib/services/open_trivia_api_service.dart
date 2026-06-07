@@ -1,12 +1,15 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+/// Cliente HTTP para obter perguntas da Open Trivia Database.
 class OpenTriviaApiClient {
+ // A API usa tokens para reduzir repetição de perguntas durante uma sessão.
   String? token;
   DateTime? tokenValidUntil;
   final Duration tokenDuration = Duration(hours: 6);
   final Duration safetyOffsetDuration = Duration(minutes: 5);
 
+ /// Obtém ou reutiliza um token válido para pedidos à Open Trivia.
   Future<String> _getToken() async {
     if (token != null &&
         tokenValidUntil!.isBefore(
@@ -33,6 +36,7 @@ class OpenTriviaApiClient {
     return token as String;
   }
 
+/// Pede perguntas aleatórias à API, opcionalmente filtradas por categoria.
   Future<List<OpenTriviaQuestion>> getRandomQuestions({
     required int amount,
     int? category,
@@ -71,7 +75,7 @@ class OpenTriviaApiClient {
     ).map((e) => OpenTriviaQuestion.fromJson(e)).toList();
   }
 }
-
+/// Modelo cru devolvido pela Open Trivia API antes da tradução.
 class OpenTriviaQuestion {
   final String type;
   final String difficulty;
@@ -89,6 +93,7 @@ class OpenTriviaQuestion {
     required this.incorrectAnswers,
   });
 
+/// A API devolve texto codificado em URL, por isso é descodificado aqui.
   factory OpenTriviaQuestion.fromJson(Map<String, dynamic> json) =>
       OpenTriviaQuestion(
         type: Uri.decodeComponent(json['type'] as String),
@@ -101,6 +106,7 @@ class OpenTriviaQuestion {
             .toList(),
       );
 
+  /// Útil para debug ou persistência temporária do formato original.
   Map<String, dynamic> toJson() {
     return {
       'type': type,

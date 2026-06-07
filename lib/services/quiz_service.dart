@@ -4,6 +4,7 @@ import 'open_trivia_api_service.dart';
 import '../database/question_database.dart';
 import 'translation_api_service.dart';
 
+/// Orquestra a criação de partidas: API externa, tradução e cache local.
 class QuizService {
   QuizService({
     OpenTriviaApiClient? triviaApi,
@@ -19,11 +20,12 @@ class QuizService {
 
   static const int questionsPerGame = 10;
 
-
+  /// Atalho para começar um jogo normal por categoria.
   Future<List<QuizQuestion>> startCategoryQuiz(int categoryId) {
     return startQuiz(amount: questionsPerGame, categoryId: categoryId);
   }
 
+ /// Busca perguntas, reutiliza cache quando possível e traduz as novas.
   Future<List<QuizQuestion>> startQuiz({
     required int amount,
     int? categoryId,
@@ -37,6 +39,7 @@ class QuizService {
     for (final raw in rawQuestions) {
       categoryId = categoryId ?? _categoryIdFromName(raw.category);
 
+ // Se a pergunta já existe traduzida no Firestore, evita nova tradução.
       final cached = await _database.findByOriginalQuestion(raw.question);
       if (cached != null) {
         result.add(cached);
@@ -47,12 +50,14 @@ class QuizService {
     return result;
   }
 
+/// Liga o nome textual da API ao id usado pela lista de categorias da app.
   int _categoryIdFromName(String name) {
     return categories
         .firstWhere((c) => c.name == name)
         .id;
   }
 
+ /// Traduz pergunta e respostas em paralelo, guarda e devolve a pergunta final.
   Future<QuizQuestion> _translateAndSave(
     OpenTriviaQuestion raw,
     int categoryId,

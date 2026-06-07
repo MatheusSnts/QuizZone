@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
 
+/// Ecrã de criação de conta.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -21,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirm = true;
   bool _loading = false;
 
+  /// Cria a conta e grava o nome escolhido no perfil Firebase do utilizador.
   Future<void> _createAccount() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -253,6 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
+  /// Cria a conta e grava o nome escolhido no perfil Firebase do utilizador. 
 class _Label extends StatelessWidget {
   const _Label(this.text);
   final String text;

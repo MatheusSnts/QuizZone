@@ -6,6 +6,9 @@ import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
+/// Ecrã de perfil do jogador.
+///
+/// Combina dados da conta Firebase com o XP guardado em Firestore.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -106,6 +109,7 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+/// Cabeçalho com avatar, nome, email e nível atual.
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.username,
@@ -177,6 +181,7 @@ class _ProfileHeader extends StatelessWidget {
   }
 }
 
+/// Pequeno selo visual para destacar o nível do jogador.
 class _LevelBadge extends StatelessWidget {
   const _LevelBadge({required this.level});
 
@@ -210,6 +215,7 @@ class _LevelBadge extends StatelessWidget {
   }
 }
 
+/// Cartão com a barra de progresso até ao próximo nível.
 class _LevelProgress extends StatelessWidget {
   const _LevelProgress({required this.profile});
 
@@ -296,6 +302,7 @@ class _LevelProgress extends StatelessWidget {
   }
 }
 
+/// Grelha de métricas calculadas a partir do XP do perfil.
 class _StatsGrid extends StatelessWidget {
   const _StatsGrid({required this.profile});
 
@@ -340,6 +347,7 @@ class _StatsGrid extends StatelessWidget {
   }
 }
 
+/// Cartão reutilizável para cada métrica do perfil.
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
@@ -403,6 +411,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
+/// Cartão reutilizável para cada métrica do perfil.
 class _AccountActions extends StatelessWidget {
   const _AccountActions({required this.email});
 
@@ -449,6 +458,7 @@ class _AccountActions extends StatelessWidget {
   }
 }
 
+/// Estado de fallback caso o ecrã seja aberto sem sessão ativa.
 class _SignedOutView extends StatelessWidget {
   const _SignedOutView({required this.username});
 

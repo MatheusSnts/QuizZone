@@ -7,6 +7,9 @@ import '../services/auth_service.dart';
 import '../database/profile_database.dart';
 import '../theme/app_theme.dart';
 
+/// Ecrã inicial depois do login.
+///
+/// Mostra o resumo do jogador, modos de jogo e categorias disponíveis.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -85,6 +88,8 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+
+/// Menu lateral com dados básicos da conta e ações do utilizador.
 class _ProfileDrawer extends StatelessWidget {
   const _ProfileDrawer({required this.username});
 
@@ -180,7 +185,7 @@ class _Header extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final uid = authService.value.currentUser?.uid;
-
+  // O avatar também funciona como atalho para abrir o drawer.
     return Row(
       children: [
         InkWell(
@@ -219,6 +224,8 @@ class _Header extends StatelessWidget {
                   ),
                 )
               else
+              // O XP é observado em tempo real para refletir partidas recentes.
+
                 StreamBuilder<UserProfile>(
                   stream: ProfileDatabase().stream(uid),
                   builder: (context, snapshot) {
@@ -242,7 +249,7 @@ class _Header extends StatelessWidget {
     );
   }
 }
-
+/// Cartão destacado para o desafio diário.
 class _DailyChallengeCard extends StatelessWidget {
   const _DailyChallengeCard({
     required this.remaining,
@@ -328,6 +335,7 @@ class _DailyChallengeCard extends StatelessWidget {
   }
 }
 
+/// Linha horizontal com os modos de jogo principais.
 class _GameModeRow extends StatelessWidget {
   const _GameModeRow();
 
@@ -345,6 +353,7 @@ class _GameModeRow extends StatelessWidget {
   }
 }
 
+/// Cartão clicável de um modo de jogo.
 class _GameModeCard extends StatelessWidget {
   const _GameModeCard({required this.mode});
 
@@ -397,6 +406,7 @@ class _GameModeCard extends StatelessWidget {
   }
 }
 
+/// Lista horizontal de categorias de quiz.
 class _CategoriesRow extends StatelessWidget {
   const _CategoriesRow();
 
@@ -415,6 +425,7 @@ class _CategoriesRow extends StatelessWidget {
   }
 }
 
+/// Item clicável de categoria.
 class _CategoryItem extends StatelessWidget {
   const _CategoryItem({required this.category});
 

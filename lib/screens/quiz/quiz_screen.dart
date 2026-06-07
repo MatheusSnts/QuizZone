@@ -11,6 +11,9 @@ import '../../database/profile_database.dart';
 import '../../services/quiz_service.dart';
 import '../../theme/app_theme.dart';
 
+/// Ecrã principal da partida de quiz.
+///
+/// Pode funcionar por categoria (`categoryId`) ou por modo de jogo (`mode`).
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key, this.categoryId, this.mode});
 
@@ -26,9 +29,11 @@ class _QuizScreenState extends State<QuizScreen> {
   final QuizService _quizService = QuizService();
   final ProfileDatabase _profileDatabase = ProfileDatabase();
 
+// Perguntas carregadas para a partida atual.
   late Future<List<_GameQuestion>> _loadFuture;
   final List<_GameQuestion> _questions = [];
 
+  // Estado de progresso e pontuação da partida.
   int _index = 0;
   int _correct = 0;
   int _answeredCount = 0;
@@ -39,6 +44,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _xpSaved = false;
   bool _gameOver = false;
 
+ // Estado usado apenas em modos com tempo limite.
   Timer? _timer;
   int _secondsLeft = 0;
 
@@ -75,6 +81,7 @@ class _QuizScreenState extends State<QuizScreen> {
     super.dispose();
   }
 
+/// Carrega perguntas e prepara as respostas embaralhadas para cada uma.
   Future<List<_GameQuestion>> _load() async {
     final questions = await _quizService.startQuiz(
       amount: _amount,
@@ -87,6 +94,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return games;
   }
 
+/// Reinicia todo o estado da partida depois de um erro.
   void _retry() {
     _timer?.cancel();
     setState(() {
@@ -106,6 +114,7 @@ class _QuizScreenState extends State<QuizScreen> {
     _startTimer();
   }
 
+ /// Inicia o temporizador quando o modo de jogo tem limite de tempo.
   void _startTimer() {
     final limit = widget.mode?.timeLimitSeconds;
     if (limit == null)
@@ -124,7 +133,7 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     });
   }
-
+ /// Processa a resposta escolhida, calcula XP e aplica regras do modo.
   void _onAnswer(String answer) {
     if (_answered || _finished) return;
     final question = _questions[_index];
@@ -143,6 +152,7 @@ class _QuizScreenState extends State<QuizScreen> {
     Future.delayed(_delayAfterQuestion, _next);
   }
 
+ /// Avança para a próxima pergunta ou termina a partida.
   void _next() {
     if (_finished) return;
     if (_gameOver || _index >= _questions.length - 1) {
@@ -156,6 +166,7 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
+ /// Finaliza a partida e guarda o XP ganho uma única vez.
   Future<void> _finish() async {
     _timer?.cancel();
     if (mounted) setState(() => _finished = true);
@@ -167,7 +178,7 @@ class _QuizScreenState extends State<QuizScreen> {
       await _profileDatabase.addXp(uid, _earnedXp);
     }
   }
-
+ /// Confirma saída para evitar perder progresso por engano.
   Future<void> _confirmExit() async {
     if (_finished || _questions.isEmpty) {
       context.go('/home');
@@ -233,6 +244,9 @@ class _QuizScreenState extends State<QuizScreen> {
         ? _fixedCategory!
         : _categoryFor(game);
 
+
+   // No contra-tempo, a barra representa segundos restantes; nos outros
+    // modos, representa o avanço nas perguntas.
     final double progress = isTimeAttack
         ? _secondsLeft / widget.mode!.timeLimitSeconds!
         : (_index + 1) / _questions.length;
@@ -328,12 +342,13 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   String _formatTime(int seconds) {
-    final minutes = seconds / 60;
+    final minutes = seconds ~/ 60;
     final rest = seconds % 60;
     return '$minutes:${rest.toString().padLeft(2, '0')}';
   }
 }
 
+/// Junta a pergunta às respostas embaralhadas que aparecem no ecrã.
 class _GameQuestion {
   late List<String> answers;
   final QuizQuestion question;
@@ -344,8 +359,10 @@ class _GameQuestion {
   }
 }
 
+/// Estado visual de uma resposta depois do jogador escolher uma opção.
 enum _AnswerState { idle, correct, wrong, disabled }
 
+/// Cartão com a categoria e o texto da pergunta atual.
 class _QuestionCard extends StatelessWidget {
   const _QuestionCard({required this.category, required this.question});
 
@@ -398,6 +415,7 @@ class _QuestionCard extends StatelessWidget {
   }
 }
 
+/// Opção de resposta com estado visual de certo, errado ou desativado.
 class _AnswerCard extends StatelessWidget {
   const _AnswerCard({
     required this.text,
@@ -498,6 +516,7 @@ class _CircleIconButton extends StatelessWidget {
   }
 }
 
+/// Vista enquanto as perguntas estão a ser carregadas/traduzidas.
 class _LoadingView extends StatelessWidget {
   const _LoadingView();
 
@@ -529,6 +548,7 @@ class _LoadingView extends StatelessWidget {
   }
 }
 
+/// Vista de erro quando não é possível carregar perguntas.
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.onRetry});
   final VoidCallback onRetry;
@@ -579,6 +599,7 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
+/// Resumo apresentado no final da partida.
 class _ResultView extends StatelessWidget {
   const _ResultView({
     required this.subtitle,
@@ -662,6 +683,7 @@ class _ResultView extends StatelessWidget {
   }
 }
 
+/// Métrica pequena usada no resumo final.
 class _ResultStat extends StatelessWidget {
   const _ResultStat({
     required this.label,

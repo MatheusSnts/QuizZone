@@ -7,6 +7,7 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+ // Inicializa o Firebase antes de qualquer ecrã usar Auth ou Firestore.
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
@@ -19,6 +20,7 @@ class QuizZoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+     // MaterialApp.router usa o GoRouter definido em app_router.dart.
     return MaterialApp.router(
       title: 'QuizZone',
       debugShowCheckedModeBanner: false,

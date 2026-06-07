@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+/// Cores partilhadas pela aplicação.
 class AppColors {
 
 
@@ -16,6 +17,7 @@ class AppColors {
 
 class AppTheme {
 
+ /// Cria o tema Material 3 usado em todos os ecrãs.
   static ThemeData build() {
 
     final colorScheme = ColorScheme.fromSeed(
