@@ -3,9 +3,13 @@ import '../utils/daily_challenge.dart';
 class UserProfile {
   const UserProfile({
     required this.xp,
+    this.uid = '',
     this.username = 'Jogador',
     this.lastDailyChallenge,
   });
+
+  /// id do user Firebase Auth
+  final String uid;
 
   /// Experiência total acumulada pelo jogador.
   final int xp;
@@ -34,9 +38,13 @@ class UserProfile {
       lastDailyChallenge != DailyChallenge.today();
 
   /// Constrói um perfil a partir dos dados de um documento Firestore.
+  ///
+  /// O [uid] deve ser o id do documento (`doc.id`), para identificar o jogador
+  /// de forma fiável (por exemplo, ao destacá-lo no ranking).
   factory UserProfile.fromMap(Map<String, dynamic>? data) {
     final rawName = (data?['username'] as String?)?.trim();
     return UserProfile(
+      uid: data?['id'],
       xp: (data?['xp'] as num?)?.toInt() ?? 0,
       username: (rawName == null || rawName.isEmpty) ? 'Jogador' : rawName,
       lastDailyChallenge: data?['lastDailyChallenge'] as String?,

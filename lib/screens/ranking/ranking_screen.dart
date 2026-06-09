@@ -65,19 +65,19 @@ class RankingScreen extends StatelessWidget {
                           );
                         }
 
-                        final currentUserName =
-                            authService.value.currentUser?.displayName;
+                        final currentUid =
+                            authService.value.currentUser?.uid;
 
                         return ListView.separated(
                           itemCount: players.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 14),
                           itemBuilder: (context, index) {
                             final player = players[index];
 
                             // Destaca o utilizador autenticado.
                             final isCurrentUser =
-                                player.username == currentUserName;
+                                currentUid != null && player.uid == currentUid;
 
                             return _RankingPlayerTile(
                               position: index + 1,
