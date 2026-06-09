@@ -68,6 +68,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
        onDestinationSelected: (index) {
+          if (index == 1) context.go('/ranking');
           if (index == 2) context.go('/profile');
         },
       ),

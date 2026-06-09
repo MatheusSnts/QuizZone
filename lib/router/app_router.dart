@@ -7,6 +7,7 @@ import '../models/game_mode.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/quiz/quiz_screen.dart';
+import '../screens/ranking/ranking_screen.dart';
 import '../services/auth_service.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -46,6 +47,10 @@ final GoRouter appRouter = GoRouter(
         return QuizScreen(mode: mode);
       },
     ),
+    GoRoute(
+  path: '/ranking',
+  builder: (context, state) => const RankingScreen(),
+),
   ],
   redirect: (context, state) {
     final isSignedIn = authService.value.currentUser != null;

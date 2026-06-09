@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
 
+import '../../database/profile_database.dart';
+
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -21,30 +24,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirm = true;
   bool _loading = false;
 
-  Future<void> _createAccount() async {
-    if (!_formKey.currentState!.validate()) return;
+  
+Future<void> _createAccount() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
-    try {
-      final credential = await authService.value.createAccount(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      final name = _nameController.text.trim();
-      if (name.isNotEmpty) {
-        await credential.user?.updateDisplayName(name);
-      }
-      if (!mounted) return;
-      context.go('/home');
-    } on FirebaseAuthException catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ocorreu um erro. Tenta novamente.')),
-      );
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  setState(() => _loading = true);
+
+  try {
+    final credential = await authService.value.createAccount(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    final name = _nameController.text.trim();
+
+    // Atualiza o nome do utilizador no Firebase Auth.
+    if (name.isNotEmpty) {
+      await credential.user?.updateDisplayName(name);
+    }
+
+    // Cria o documento do utilizador no Firestore.
+    await ProfileDatabase().createUser(
+      uid: credential.user!.uid,
+      username: name,
+    );
+
+    if (!mounted) return;
+
+    context.go('/home');
+  } on FirebaseAuthException catch (_) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Ocorreu um erro. Tenta novamente.'),
+      ),
+    );
+  } finally {
+    if (mounted) {
+      setState(() => _loading = false);
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
