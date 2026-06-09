@@ -40,6 +40,7 @@ class OpenTriviaApiClient {
   Future<List<OpenTriviaQuestion>> getRandomQuestions({
     required int amount,
     int? category,
+    String? difficulty,
     String type = 'multiple',
   }) async {
     if (amount < 1 || amount > 50) {
@@ -55,6 +56,11 @@ class OpenTriviaApiClient {
 
     if (category != null) {
       params['category'] = category.toString();
+    }
+
+    // 'easy', 'medium' ou 'hard'; quando nulo a API devolve dificuldades mistas.
+    if (difficulty != null) {
+      params['difficulty'] = difficulty;
     }
 
     final url = Uri.https('opentdb.com', '/api.php', params);

@@ -37,6 +37,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const ProfileScreen(),
     ),
     GoRoute(
+      path: '/daily',
+      builder: (context, state) => const QuizScreen(isDailyChallenge: true),
+    ),
+    GoRoute(
       path: '/quiz/:categoryId',
       builder: (context, state) => QuizScreen(
         categoryId: int.parse(state.pathParameters['categoryId']!),
@@ -63,6 +67,7 @@ final GoRouter appRouter = GoRouter(
     // Rotas protegidas exigem uma sessão Firebase ativa.
     final isProtectedRoute = location == '/home' ||
         location == '/profile' ||
+        location == '/daily' ||
         location.startsWith('/quiz') ||
         location.startsWith('/play');
 

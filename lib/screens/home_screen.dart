@@ -6,6 +6,7 @@ import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../database/profile_database.dart';
 import '../theme/app_theme.dart';
+import '../utils/daily_challenge.dart';
 
 
 /// Ecrã inicial depois do login.
@@ -41,7 +42,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               _Header(username: username),
               const SizedBox(height: 24),
-              const _DailyChallengeCard(remaining: '14h 23m', questions: 10),
+              const _DailyChallengeCard(),
               const SizedBox(height: 28),
               _SectionTitle('Modos de Jogo', theme: theme),
               const SizedBox(height: 12),
@@ -293,19 +294,49 @@ class _HeaderState extends State<_Header> {
 }
 
 /// Cartão destacado para o desafio diário.
+///
+/// Mostra um jogo de 10 perguntas difíceis, jogável uma vez por dia. Quando o
+/// desafio de hoje já foi concluído, o cartão fica bloqueado até ao dia seguinte.
+class _DailyChallengeCard extends StatefulWidget {
+  const _DailyChallengeCard();
 
-// Cartão do desafio diário.
-// Apresenta o número de perguntas disponíveis,
-// tempo restante e botão para iniciar o desafio.
+  @override
+  State<_DailyChallengeCard> createState() => _DailyChallengeCardState();
+}
 
-class _DailyChallengeCard extends StatelessWidget {
-  const _DailyChallengeCard({
-    required this.remaining,
-    required this.questions,
-  });
+class _DailyChallengeCardState extends State<_DailyChallengeCard> {
+  final ProfileDatabase _database = ProfileDatabase();
 
-  final String remaining;
-  final int questions;
+  /// A stream é criada uma única vez para não voltar a subscrever o Firestore
+  /// a cada rebuild.
+  Stream<UserProfile>? _profileStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = authService.value.currentUser?.uid;
+    if (uid != null) {
+      _profileStream = _database.stream(uid);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<UserProfile>(
+      stream: _profileStream,
+      builder: (context, snapshot) {
+        final available = snapshot.data?.dailyChallengeAvailable ?? true;
+        return _DailyChallengeCardView(available: available);
+      },
+    );
+  }
+}
+
+/// Parte visual do cartão do desafio diário, dependente da disponibilidade.
+class _DailyChallengeCardView extends StatelessWidget {
+  const _DailyChallengeCardView({required this.available});
+
+  final bool available;
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +379,9 @@ class _DailyChallengeCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            '$questions perguntas para todos os jogadores',
+            available
+                ? '${DailyChallenge.questionAmount} perguntas difíceis'
+                : 'Desafio de hoje concluído',
             style: TextStyle(
               color: cs.onPrimary,
               fontSize: 18,
@@ -358,7 +391,9 @@ class _DailyChallengeCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Termina em $remaining',
+            available
+                ? 'Ganha XP extra a cada resposta certa.'
+                : 'Volta amanhã para um novo desafio.',
             style: TextStyle(
               color: cs.onPrimary.withValues(alpha: 0.85),
               fontSize: 13,
@@ -367,15 +402,21 @@ class _DailyChallengeCard extends StatelessWidget {
           const SizedBox(height: 18),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.play_arrow_rounded, size: 22),
-              label: const Text('Jogar'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.black,
-              ),
-            ),
+            child: available
+                ? FilledButton.icon(
+                    onPressed: () => context.go('/daily'),
+                    icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                    label: const Text('Jogar'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.black,
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: null,
+                    icon: const Icon(Icons.check_rounded, size: 22),
+                    label: const Text('Concluído'),
+                  ),
           ),
         ],
       ),

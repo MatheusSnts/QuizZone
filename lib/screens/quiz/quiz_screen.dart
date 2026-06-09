@@ -10,16 +10,27 @@ import '../../services/auth_service.dart';
 import '../../database/profile_database.dart';
 import '../../services/quiz_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/daily_challenge.dart';
 
 /// Ecrã principal da partida de quiz.
 ///
-/// Pode funcionar por categoria (`categoryId`) ou por modo de jogo (`mode`).
+/// Pode funcionar por categoria (`categoryId`), por modo de jogo (`mode`) ou
+/// como desafio diário (`isDailyChallenge`).
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key, this.categoryId, this.mode});
+  const QuizScreen({
+    super.key,
+    this.categoryId,
+    this.mode,
+    this.isDailyChallenge = false,
+  });
 
   final int? categoryId;
 
   final GameMode? mode;
+
+  /// Quando verdadeiro, joga o desafio diário: 10 perguntas `hard`, uma vez por
+  /// dia por utilizador.
+  final bool isDailyChallenge;
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -49,6 +60,7 @@ class _QuizScreenState extends State<QuizScreen> {
   int _secondsLeft = 0;
 
   bool get _isCategoryMode => widget.categoryId != null;
+  bool get _isDaily => widget.isDailyChallenge;
 
   Category? get _fixedCategory => _isCategoryMode
       ? categories.firstWhere((c) => c.id == widget.categoryId)
@@ -57,12 +69,17 @@ class _QuizScreenState extends State<QuizScreen> {
   Category _categoryFor(_GameQuestion game) =>
       categories.firstWhere((c) => c.id == game.question.categoryId);
 
-  String get _title =>
-      _isCategoryMode ? _fixedCategory!.translatedName : widget.mode!.title;
+  String get _title {
+    if (_isCategoryMode) return _fixedCategory!.translatedName;
+    if (_isDaily) return 'Desafio Diário';
+    return widget.mode!.title;
+  }
 
-  int get _amount => _isCategoryMode
-      ? QuizService.questionsPerGame
-      : widget.mode!.questionAmount;
+  int get _amount {
+    if (_isDaily) return DailyChallenge.questionAmount;
+    if (_isCategoryMode) return QuizService.questionsPerGame;
+    return widget.mode!.questionAmount;
+  }
 
   Duration get _delayAfterQuestion => widget.mode == GameMode.timeAttack
       ? const Duration(milliseconds: 700)
@@ -86,6 +103,7 @@ class _QuizScreenState extends State<QuizScreen> {
     final questions = await _quizService.startQuiz(
       amount: _amount,
       categoryId: widget.categoryId,
+      difficulty: _isDaily ? DailyChallenge.difficulty : null,
     );
     final games = questions.map(_GameQuestion.new).toList();
     _questions
@@ -176,8 +194,18 @@ class _QuizScreenState extends State<QuizScreen> {
     _xpSaved = true;
 
     final uid = authService.value.currentUser?.uid;
-    if (uid != null && _earnedXp > 0) {
+    if (uid == null) return;
+
+    if (_earnedXp > 0) {
       await _profileDatabase.addXp(uid, _earnedXp);
+    }
+    // Marca o desafio como concluído para bloquear novas tentativas hoje,
+    // mesmo que o jogador não tenha ganho XP.
+    if (_isDaily) {
+      await _profileDatabase.markDailyChallengeDone(
+        uid,
+        DailyChallenge.today(),
+      );
     }
   }
 

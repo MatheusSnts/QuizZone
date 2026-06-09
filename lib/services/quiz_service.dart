@@ -26,18 +26,25 @@ class QuizService {
   }
 
  /// Busca perguntas, reutiliza cache quando possível e traduz as novas.
+ ///
+ /// `difficulty` ('easy'/'medium'/'hard') filtra a dificuldade; quando nulo a
+ /// API devolve perguntas de dificuldades mistas.
   Future<List<QuizQuestion>> startQuiz({
     required int amount,
     int? categoryId,
+    String? difficulty,
   }) async {
     final rawQuestions = await _triviaApi.getRandomQuestions(
       amount: amount,
       category: categoryId,
+      difficulty: difficulty,
     );
 
     final result = <QuizQuestion>[];
     for (final raw in rawQuestions) {
-      categoryId = categoryId ?? _categoryIdFromName(raw.category);
+      // Cada pergunta usa a sua própria categoria; num jogo multi-categoria
+      // (categoryId nulo) o id é deduzido do nome devolvido pela API.
+      final questionCategoryId = categoryId ?? _categoryIdFromName(raw.category);
 
  // Se a pergunta já existe traduzida no Firestore, evita nova tradução.
       final cached = await _database.findByOriginalQuestion(raw.question);
@@ -45,15 +52,17 @@ class QuizService {
         result.add(cached);
         continue;
       }
-      result.add(await _translateAndSave(raw, categoryId));
+      result.add(await _translateAndSave(raw, questionCategoryId));
     }
     return result;
   }
 
 /// Liga o nome textual da API ao id usado pela lista de categorias da app.
+///
+/// Recorre a Conhecimento Geral (id 9) se o nome não constar da lista local.
   int _categoryIdFromName(String name) {
     return categories
-        .firstWhere((c) => c.name == name)
+        .firstWhere((c) => c.name == name, orElse: () => categories.first)
         .id;
   }
 
