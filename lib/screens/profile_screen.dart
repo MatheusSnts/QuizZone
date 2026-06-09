@@ -93,6 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
         onDestinationSelected: (index) {
           if (index == 0) context.go('/home');
+          if (index == 1) context.go('/ranking');
         },
       ),
     );
