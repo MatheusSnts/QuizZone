@@ -61,7 +61,7 @@ final GoRouter appRouter = GoRouter(
 ),
   ],
   redirect: (context, state) {
-    final isSignedIn = authService.value.currentUser != null;
+    final isSignedIn = authService.currentUser != null;
     final location = state.matchedLocation;
     
     // Rotas de autenticação ficam disponíveis apenas antes do login.

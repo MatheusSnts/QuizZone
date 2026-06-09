@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _loading = true);
     try {
-      await authService.value.signIn(
+      await authService.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );

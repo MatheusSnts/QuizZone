@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
 /// Instância partilhada do serviço de autenticação.
-ValueNotifier<AuthService> authService = ValueNotifier(AuthService());
+final AuthService authService = AuthService();
 
 /// Encapsula as operações de Firebase Authentication usadas pela app.
 class AuthService {

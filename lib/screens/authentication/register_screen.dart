@@ -32,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   setState(() => _loading = true);
 
   try {
-    final credential = await authService.value.createAccount(
+    final credential = await authService.createAccount(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );

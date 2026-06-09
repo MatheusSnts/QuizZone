@@ -193,7 +193,7 @@ class _QuizScreenState extends State<QuizScreen> {
     if (_xpSaved) return;
     _xpSaved = true;
 
-    final uid = authService.value.currentUser?.uid;
+    final uid = authService.currentUser?.uid;
     if (uid == null) return;
 
     if (_earnedXp > 0) {

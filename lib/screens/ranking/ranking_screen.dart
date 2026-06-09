@@ -66,7 +66,7 @@ class RankingScreen extends StatelessWidget {
                         }
 
                         final currentUid =
-                            authService.value.currentUser?.uid;
+                            authService.currentUser?.uid;
 
                         return ListView.separated(
                           itemCount: players.length,

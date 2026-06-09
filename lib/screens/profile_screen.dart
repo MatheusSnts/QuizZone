@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final uid = authService.value.currentUser?.uid;
+    final uid = authService.currentUser?.uid;
     if (uid != null) {
       _profileStream = _database.stream(uid);
     }
@@ -32,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = authService.value.currentUser;
+    final user = authService.currentUser;
     final displayName = user?.displayName?.trim() ?? '';
     final username = displayName.isNotEmpty
         ? displayName
@@ -471,7 +471,7 @@ class _AccountActions extends StatelessWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await authService.value.signOut();
+    await authService.signOut();
     if (context.mounted) context.go('/login');
   }
 }

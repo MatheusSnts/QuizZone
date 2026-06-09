@@ -27,7 +27,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = authService.value.currentUser;
+    final user = authService.currentUser;
     final displayName = user?.displayName?.trim() ?? '';
     final username = displayName.isNotEmpty
         ? displayName
@@ -119,7 +119,7 @@ class _ProfileDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final email = authService.value.currentUser?.email ?? '';
+    final email = authService.currentUser?.email ?? '';
 
     return Drawer(
       child: SafeArea(
@@ -190,7 +190,7 @@ class _ProfileDrawer extends StatelessWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await authService.value.signOut();
+    await authService.signOut();
     if (context.mounted) context.go('/login');
   }
 }
@@ -217,7 +217,7 @@ class _HeaderState extends State<_Header> {
   @override
   void initState() {
     super.initState();
-    final uid = authService.value.currentUser?.uid;
+    final uid = authService.currentUser?.uid;
     if (uid != null) {
       _profileStream = _database.stream(uid);
     }
@@ -318,7 +318,7 @@ class _DailyChallengeCardState extends State<_DailyChallengeCard> {
   @override
   void initState() {
     super.initState();
-    final uid = authService.value.currentUser?.uid;
+    final uid = authService.currentUser?.uid;
     if (uid != null) {
       _profileStream = _database.stream(uid);
     }
