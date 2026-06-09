@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
 
+/// Ecrã de login com Firebase Authentication.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -18,12 +19,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _loading = false;
 
+/// Valida o formulário, tenta iniciar sessão e redireciona para a home.
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
     try {
-      await authService.value.signIn(
+      await authService.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
@@ -31,9 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
       context.go('/home');
     } on FirebaseAuthException catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Ocorreu um erro. Tenta novamente.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ocorreu um erro. Tenta novamente.')),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -246,6 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+/// Botão visual para provedores sociais ainda não implementados.
 class _SocialButton extends StatelessWidget {
   const _SocialButton({
     required this.icon,

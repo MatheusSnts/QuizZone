@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_zone/services/notification_service.dart';
 import '../models/category.dart';
 import '../models/game_mode.dart';
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../database/profile_database.dart';
 import '../theme/app_theme.dart';
+import '../utils/daily_challenge.dart';
+
+
+/// Ecrã inicial depois do login.
+///
+/// Mostra o resumo do jogador, modos de jogo e categorias disponíveis.
 
 // Ecrã principal da aplicação.
 // Apresenta informações do utilizador, desafio diário,
 // modos de jogo e categorias disponíveis.
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -19,7 +27,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = authService.value.currentUser;
+    final user = authService.currentUser;
     final displayName = user?.displayName?.trim() ?? '';
     final username = displayName.isNotEmpty
         ? displayName
@@ -35,7 +43,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               _Header(username: username),
               const SizedBox(height: 24),
-              const _DailyChallengeCard(remaining: '14h 23m', questions: 10),
+              const _DailyChallengeCard(),
               const SizedBox(height: 28),
               _SectionTitle('Modos de Jogo', theme: theme),
               const SizedBox(height: 12),
@@ -68,6 +76,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
        onDestinationSelected: (index) {
+          if (index == 1) context.go('/ranking');
           if (index == 2) context.go('/profile');
         },
       ),
@@ -93,9 +102,14 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+
+
+/// Menu lateral com dados básicos da conta e ações do utilizador.
+
 // Painel lateral (drawer) de perfil.
 // Mostra avatar, nome e email do utilizador
 // e permite terminar a sessão.
+
 class _ProfileDrawer extends StatelessWidget {
   const _ProfileDrawer({required this.username});
 
@@ -105,7 +119,7 @@ class _ProfileDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final email = authService.value.currentUser?.email ?? '';
+    final email = authService.currentUser?.email ?? '';
 
     return Drawer(
       child: SafeArea(
@@ -176,7 +190,7 @@ class _ProfileDrawer extends StatelessWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await authService.value.signOut();
+    await authService.signOut();
     if (context.mounted) context.go('/login');
   }
 }
@@ -184,17 +198,39 @@ class _ProfileDrawer extends StatelessWidget {
 // Cabeçalho da aplicação.
 // Mostra avatar, nome do utilizador, nível,
 // experiência acumulada e botão de notificações.
-class _Header extends StatelessWidget {
+class _Header extends StatefulWidget {
   const _Header({required this.username});
 
   final String username;
 
   @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> {
+  final ProfileDatabase _database = ProfileDatabase();
+
+  /// A stream é criada uma única vez para não voltar a subscrever o Firestore
+  /// a cada rebuild do cabeçalho.
+  Stream<UserProfile>? _profileStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = authService.currentUser?.uid;
+    if (uid != null) {
+      _profileStream = _database.stream(uid);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final uid = authService.value.currentUser?.uid;
-
+    final username = widget.username;
+    final initial =
+        username.trim().isEmpty ? 'J' : username.trim()[0].toUpperCase();
+  // O avatar também funciona como atalho para abrir o drawer.
     return Row(
       children: [
         InkWell(
@@ -204,7 +240,7 @@ class _Header extends StatelessWidget {
             radius: 26,
             backgroundColor: cs.primaryContainer,
             child: Text(
-              username.substring(0, 1).toUpperCase(),
+              initial,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -225,7 +261,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              if (uid == null)
+              if (_profileStream == null)
                 Text(
                   'Nível 1  •  0 XP',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -233,8 +269,10 @@ class _Header extends StatelessWidget {
                   ),
                 )
               else
+              // O XP é observado em tempo real para refletir partidas recentes.
+
                 StreamBuilder<UserProfile>(
-                  stream: ProfileDatabase().stream(uid),
+                  stream: _profileStream,
                   builder: (context, snapshot) {
                     final profile = snapshot.data ?? const UserProfile(xp: 0);
                     return Text(
@@ -250,24 +288,59 @@ class _Header extends StatelessWidget {
         ),
         IconButton(
           icon: Icon(Icons.notifications_outlined, color: cs.onSurface),
-          onPressed: () {},
+          onPressed: () {
+            NotificationService().showNotification(title: 'Desafio Diário disponível!', body: "Testa os teus conhecimentos neste desafio!");
+          },
         ),
       ],
     );
   }
 }
 
-// Cartão do desafio diário.
-// Apresenta o número de perguntas disponíveis,
-// tempo restante e botão para iniciar o desafio.
-class _DailyChallengeCard extends StatelessWidget {
-  const _DailyChallengeCard({
-    required this.remaining,
-    required this.questions,
-  });
+/// Cartão destacado para o desafio diário.
+///
+/// Mostra um jogo de 10 perguntas difíceis, jogável uma vez por dia. Quando o
+/// desafio de hoje já foi concluído, o cartão fica bloqueado até ao dia seguinte.
+class _DailyChallengeCard extends StatefulWidget {
+  const _DailyChallengeCard();
 
-  final String remaining;
-  final int questions;
+  @override
+  State<_DailyChallengeCard> createState() => _DailyChallengeCardState();
+}
+
+class _DailyChallengeCardState extends State<_DailyChallengeCard> {
+  final ProfileDatabase _database = ProfileDatabase();
+
+  /// A stream é criada uma única vez para não voltar a subscrever o Firestore
+  /// a cada rebuild.
+  Stream<UserProfile>? _profileStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = authService.currentUser?.uid;
+    if (uid != null) {
+      _profileStream = _database.stream(uid);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<UserProfile>(
+      stream: _profileStream,
+      builder: (context, snapshot) {
+        final available = snapshot.data?.dailyChallengeAvailable ?? true;
+        return _DailyChallengeCardView(available: available);
+      },
+    );
+  }
+}
+
+/// Parte visual do cartão do desafio diário, dependente da disponibilidade.
+class _DailyChallengeCardView extends StatelessWidget {
+  const _DailyChallengeCardView({required this.available});
+
+  final bool available;
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +383,9 @@ class _DailyChallengeCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            '$questions perguntas para todos os jogadores',
+            available
+                ? '${DailyChallenge.questionAmount} perguntas difíceis'
+                : 'Desafio de hoje concluído',
             style: TextStyle(
               color: cs.onPrimary,
               fontSize: 18,
@@ -320,7 +395,9 @@ class _DailyChallengeCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Termina em $remaining',
+            available
+                ? 'Ganha XP extra a cada resposta certa.'
+                : 'Volta amanhã para um novo desafio.',
             style: TextStyle(
               color: cs.onPrimary.withValues(alpha: 0.85),
               fontSize: 13,
@@ -329,15 +406,21 @@ class _DailyChallengeCard extends StatelessWidget {
           const SizedBox(height: 18),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.play_arrow_rounded, size: 22),
-              label: const Text('Jogar'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.black,
-              ),
-            ),
+            child: available
+                ? FilledButton.icon(
+                    onPressed: () => context.go('/daily'),
+                    icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                    label: const Text('Jogar'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.black,
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: null,
+                    icon: const Icon(Icons.check_rounded, size: 22),
+                    label: const Text('Concluído'),
+                  ),
           ),
         ],
       ),
@@ -345,6 +428,7 @@ class _DailyChallengeCard extends StatelessWidget {
   }
 }
 
+/// Linha horizontal com os modos de jogo principais.
 // Secção que apresenta os diferentes modos de jogo.
 class _GameModeRow extends StatelessWidget {
   const _GameModeRow();
@@ -363,8 +447,10 @@ class _GameModeRow extends StatelessWidget {
   }
 }
 
+
 // Cartão reutilizável para representar um modo de jogo.
 // Ao ser tocado, navega para o ecrã do modo selecionado.
+
 class _GameModeCard extends StatelessWidget {
   const _GameModeCard({required this.mode});
 
@@ -417,7 +503,11 @@ class _GameModeCard extends StatelessWidget {
   }
 }
 
+
+/// Lista horizontal de categorias de quiz.
+
 // Lista horizontal de categorias disponíveis na aplicação.
+
 class _CategoriesRow extends StatelessWidget {
   const _CategoriesRow();
 
@@ -436,9 +526,13 @@ class _CategoriesRow extends StatelessWidget {
   }
 }
 
+
+/// Item clicável de categoria.
+
 // Widget responsável pela apresentação visual
 // de uma categoria individual.
 // Ao ser tocado, navega para o quiz da categoria.
+
 class _CategoryItem extends StatelessWidget {
   const _CategoryItem({required this.category});
 

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Pergunta já normalizada para ser usada no jogo e guardada no Firestore.
 class QuizQuestion {
   const QuizQuestion({
     this.id,
@@ -28,6 +29,7 @@ class QuizQuestion {
   final String difficulty;
   final String type;
 
+  /// Define a recompensa de XP com base na dificuldade original da pergunta.
   int get xpReward {
     switch (difficulty) {
       case 'hard':
@@ -53,6 +55,7 @@ class QuizQuestion {
         type: type,
       );
 
+ /// Constrói uma pergunta a partir de um documento guardado no Firestore.
   factory QuizQuestion.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
@@ -73,6 +76,7 @@ class QuizQuestion {
     );
   }
 
+ /// Converte a pergunta para o formato persistido na coleção `questions`.
   Map<String, dynamic> toFirestore() => {
         'originalQuestion': originalQuestion,
         'question': question,

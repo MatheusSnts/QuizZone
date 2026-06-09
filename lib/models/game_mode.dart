@@ -52,10 +52,12 @@ enum GameMode {
 
   final int? timeLimitSeconds;
 
+/// Indica se uma resposta errada termina imediatamente a partida.
   final bool isSurvival;
 
   bool get hasTimer => timeLimitSeconds != null;
 
+  /// Converte o slug recebido pela rota no modo de jogo correspondente.
   static GameMode? fromSlug(String slug) {
     for (GameMode mode in GameMode.values) {
       if (mode.slug == slug) return mode;

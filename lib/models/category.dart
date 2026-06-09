@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+/// Categoria disponível para quizzes da Open Trivia API.
 class Category {
   const Category({
     required this.id,
@@ -17,6 +17,9 @@ class Category {
   final IconData icon;
 }
 
+/// Lista de categorias mostradas na home.
+///
+/// O `id` corresponde ao identificador usado pela Open Trivia API.
 const List<Category> categories = [
   Category(
     id: 9,

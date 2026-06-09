@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-/// Classe responsável por armazenar todas as cores
-/// personalizadas utilizadas na aplicação.
+
+/// Cores partilhadas pela aplicação.
 class AppColors {
 
 
@@ -18,6 +18,7 @@ class AppColors {
 /// Classe responsável pela configuração global do tema da aplicação.
 class AppTheme {
 
+ /// Cria o tema Material 3 usado em todos os ecrãs.
   static ThemeData build() {
 
     final colorScheme = ColorScheme.fromSeed(

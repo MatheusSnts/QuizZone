@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
 
+/// Ecrã para pedir email de recuperação de palavra-passe.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -17,23 +18,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _loading = false;
   bool _sent = false;
 
+/// Envia o email de recuperação e troca para a vista de sucesso.
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
     try {
-      await authService.value.resetPassword(
+      await authService.resetPassword(
         email: _emailController.text.trim(),
       );
       if (!mounted) return;
       setState(() => _sent = true);
     } on FirebaseAuthException catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Ocorreu um erro. Tenta novamente.')));
-    } 
-    finally {
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ocorreu um erro. Tenta novamente.')),
+      );
+    } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -75,6 +76,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
+/// Formulário mostrado antes do email ser enviado.
   Widget _buildForm(ThemeData theme, ColorScheme cs) {
     return Form(
       key: _formKey,
@@ -156,6 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
+  /// Mensagem de confirmação depois do pedido de recuperação.
   Widget _buildSuccess(ThemeData theme, ColorScheme cs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

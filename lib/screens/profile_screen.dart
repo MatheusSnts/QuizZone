@@ -6,25 +6,45 @@ import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
-class ProfileScreen extends StatelessWidget {
+/// Ecrã de perfil do jogador.
+///
+/// Combina dados da conta Firebase com o XP guardado em Firestore.
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final ProfileDatabase _database = ProfileDatabase();
+
+  Stream<UserProfile>? _profileStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = authService.currentUser?.uid;
+    if (uid != null) {
+      _profileStream = _database.stream(uid);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = authService.value.currentUser;
+    final user = authService.currentUser;
     final displayName = user?.displayName?.trim() ?? '';
     final username = displayName.isNotEmpty
         ? displayName
         : (user?.email?.split('@').first ?? 'Jogador');
     final email = user?.email ?? 'Sem email associado';
-    final uid = user?.uid;
 
     return Scaffold(
       body: SafeArea(
-        child: uid == null
+        child: _profileStream == null
             ? _SignedOutView(username: username)
             : StreamBuilder<UserProfile>(
-                stream: ProfileDatabase().stream(uid),
+                stream: _profileStream,
                 builder: (context, snapshot) {
                   final profile = snapshot.data ?? const UserProfile(xp: 0);
 
@@ -73,6 +93,7 @@ class ProfileScreen extends StatelessWidget {
         ],
         onDestinationSelected: (index) {
           if (index == 0) context.go('/home');
+          if (index == 1) context.go('/ranking');
         },
       ),
     );
@@ -106,6 +127,7 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+/// Cabeçalho com avatar, nome, email e nível atual.
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.username,
@@ -177,6 +199,7 @@ class _ProfileHeader extends StatelessWidget {
   }
 }
 
+/// Pequeno selo visual para destacar o nível do jogador.
 class _LevelBadge extends StatelessWidget {
   const _LevelBadge({required this.level});
 
@@ -210,6 +233,7 @@ class _LevelBadge extends StatelessWidget {
   }
 }
 
+/// Cartão com a barra de progresso até ao próximo nível.
 class _LevelProgress extends StatelessWidget {
   const _LevelProgress({required this.profile});
 
@@ -296,6 +320,7 @@ class _LevelProgress extends StatelessWidget {
   }
 }
 
+/// Grelha de métricas calculadas a partir do XP do perfil.
 class _StatsGrid extends StatelessWidget {
   const _StatsGrid({required this.profile});
 
@@ -340,6 +365,7 @@ class _StatsGrid extends StatelessWidget {
   }
 }
 
+/// Cartão reutilizável para cada métrica do perfil.
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
@@ -403,6 +429,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
+/// Cartão com as ações de conta (email e terminar sessão).
 class _AccountActions extends StatelessWidget {
   const _AccountActions({required this.email});
 
@@ -444,11 +471,12 @@ class _AccountActions extends StatelessWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await authService.value.signOut();
+    await authService.signOut();
     if (context.mounted) context.go('/login');
   }
 }
 
+/// Estado de fallback caso o ecrã seja aberto sem sessão ativa.
 class _SignedOutView extends StatelessWidget {
   const _SignedOutView({required this.username});
 
