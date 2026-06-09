@@ -10,14 +10,14 @@ class ProfileDatabase {
   /// Observa alterações de XP em tempo real para atualizar a UI.
   Stream<UserProfile> stream(String uid) {
     return _users.doc(uid).snapshots().map(
-          (doc) => UserProfile.fromMap(doc.data()),
+          (doc) => UserProfile.fromMap(doc.data(), uid: doc.id),
         );
   }
 
   /// Lê o perfil uma única vez.
   Future<UserProfile> get(String uid) async {
     final doc = await _users.doc(uid).get();
-    return UserProfile.fromMap(doc.data());
+    return UserProfile.fromMap(doc.data(), uid: doc.id);
   }
 
   /// Cria o documento inicial do utilizador no Firestore.
@@ -56,7 +56,7 @@ class ProfileDatabase {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => UserProfile.fromMap(doc.data()))
+              .map((doc) => UserProfile.fromMap(doc.data(), uid: doc.id))
               .toList(),
         );
   }

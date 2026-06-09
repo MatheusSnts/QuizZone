@@ -41,10 +41,10 @@ class UserProfile {
   ///
   /// O [uid] deve ser o id do documento (`doc.id`), para identificar o jogador
   /// de forma fiável (por exemplo, ao destacá-lo no ranking).
-  factory UserProfile.fromMap(Map<String, dynamic>? data) {
+  factory UserProfile.fromMap(Map<String, dynamic>? data, {String uid = ''}) {
     final rawName = (data?['username'] as String?)?.trim();
     return UserProfile(
-      uid: data?['id'],
+      uid: uid,
       xp: (data?['xp'] as num?)?.toInt() ?? 0,
       username: (rawName == null || rawName.isEmpty) ? 'Jogador' : rawName,
       lastDailyChallenge: data?['lastDailyChallenge'] as String?,
