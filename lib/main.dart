@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:quiz_zone/firebase_options.dart';
+import 'package:quiz_zone/services/notification_service.dart';
 
 // Importa a configuração de rotas da aplicação.
 import 'router/app_router.dart';
@@ -13,6 +14,9 @@ import 'theme/app_theme.dart';
 /// Inicializa o Firebase antes de arrancar a interface.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa as notificações
+  NotificationService().initNotification();
 
  // Inicializa o Firebase antes de qualquer ecrã usar Auth ou Firestore.
   await Firebase.initializeApp(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_zone/services/notification_service.dart';
 import '../models/category.dart';
 import '../models/game_mode.dart';
 import '../models/user_profile.dart';
@@ -286,7 +287,9 @@ class _HeaderState extends State<_Header> {
         ),
         IconButton(
           icon: Icon(Icons.notifications_outlined, color: cs.onSurface),
-          onPressed: () {},
+          onPressed: () {
+            NotificationService().showNotification(title: 'Desafio Diário disponível!', body: "Testa os teus conhecimentos neste desafio!");
+          },
         ),
       ],
     );
